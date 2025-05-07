@@ -890,8 +890,9 @@ public class OLParser extends AbstractParser {
 					nextToken();
 					assertToken( Scanner.TokenType.ID, "expected output port name" );
 					setEndLine();
+					String portId = token.content();
 					nextToken();
-					return token.content();
+					return portId;
 				} );
 				bindingPort = new OutputPortInfo( PortResult.context, PortResult.internals );
 			} else if( token.isKeyword( "in" ) ) {
@@ -899,8 +900,9 @@ public class OLParser extends AbstractParser {
 					nextToken();
 					assertToken( Scanner.TokenType.ID, "expected output port name" );
 					setEndLine();
+					String portId = token.content();
 					nextToken();
-					return token.content();
+					return portId;
 				} );
 				bindingPort = new OutputPortInfo( PortResult.context, PortResult.internals );
 			}
