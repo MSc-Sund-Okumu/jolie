@@ -18,6 +18,7 @@
  */
 
 from types.text import Location as TextLocation
+from types.CodeCheckException import CodeCheckExceptionType
 
 /// A string with a text location.
 type LocatedString: string { textLocation: TextLocation }
@@ -106,6 +107,11 @@ type RawBasicType {
 	raw  //<@JavaName("rawTag")
 }
 
+/// An undefined basic type.
+type UndefinedBasicType{
+    undefined  //<@JavaName("undefinedTag")
+}
+
 /// An integer range.
 type IntRange {
 	min: int //< Must be lower than or equal to max.
@@ -135,6 +141,8 @@ type BasicType:
 	AnyBasicType
 	|
 	RawBasicType
+	|
+	UndefinedBasicType
 
 /// The type of a node in a tree type.
 type TreeNodeType {
@@ -262,8 +270,16 @@ type InterfaceDef {
 	operations*: Operation
 }
 
+type ImportDef {
+    textLocation: TextLocation
+    modulePath: LocatedString
+    importedSymbols*: LocatedSymbolRef
+}
+
+
 /// A module.
 type Module {
+	imports*: ImportDef
 	types*: TypeDef
 	interfaces*: InterfaceDef
 	services*: ServiceDef
@@ -271,10 +287,26 @@ type Module {
 
 type ResolveSymbolResponse: TypeDef | InterfaceDef | ServiceDef
 
+type ToJolieImportString {
+    /// A URI to the module the import path should be relative to
+    module: string
+    /// A URI to the target module to be imported
+    importedModule: string
+}
+
 interface AstInterface {
 RequestResponse:
-	parseModule( string )( Module ) throws CodeCheckException,
-	resolveSymbol( LocatedSymbolRef )( ResolveSymbolResponse ) throws CodeCheckException
+	parseModule( string )( Module ) throws CodeCheckException(CodeCheckExceptionType),
+
+	resolveSymbol( LocatedSymbolRef )( ResolveSymbolResponse ) throws CodeCheckException(CodeCheckExceptionType),
+	/**
+	* Returns the import path required to import request.importedModule in the source file request.module.
+	* If request.importedModule is in the standard library, an absolute path is returned, i.e. "console" instead of ......dist.jolie.packages.console
+	*/
+	toJolieImportString(ToJolieImportString)(string),
+	/// Returns the URI of the module pointed to by the request string relative to request.textLocation.source (textLocation.range is not used)
+	fromJolieImportString(LocatedString)(string)
+
 }
 
 service Ast {

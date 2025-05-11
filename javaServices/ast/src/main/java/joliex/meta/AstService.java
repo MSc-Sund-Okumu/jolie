@@ -29,6 +29,7 @@ import jolie.lang.parse.ast.expression.InlineTreeExpressionNode;
 import jolie.lang.parse.ast.expression.VariableExpressionNode;
 import jolie.lang.parse.ast.types.*;
 import jolie.lang.parse.ast.types.refinements.*;
+import jolie.lang.parse.context.ParsingContext;
 import jolie.lang.parse.util.ParsingUtils;
 import jolie.cli.CommandLineParser;
 
@@ -43,6 +44,7 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class AstService extends JavaService {
 
@@ -693,28 +695,61 @@ public class AstService extends JavaService {
 			.build();
 	}
 
+	private static joliex.meta.spec.faults.CodeCheckException getCodeCheckExceptionType( CodeCheckException e )
+		throws joliex.meta.spec.faults.CodeCheckException {
+		Optional< ParsingContext > maybeContext = e.messages().getFirst().context();
+		ColumnInterval columnInterval;
+		LineInterval lineInterval;
+
+		if( maybeContext.isPresent() ) {
+			ParsingContext context = maybeContext.get();
+			columnInterval = new ColumnInterval( context.startColumn(), context.endColumn() );
+			lineInterval = new LineInterval( context.startLine(), context.endLine() );
+		} else {
+			// is this case possible?
+			columnInterval = new ColumnInterval( 0, 0 );
+			lineInterval = new LineInterval( 0, 0 );
+		}
+		CodeCheckExceptionType codeCheckExceptionType = CodeCheckExceptionType.builder()
+			.columnInterval( columnInterval )
+			.lineInterval( lineInterval )
+			.stackTrace(
+				Arrays.stream( e.getStackTrace() ).map( (stackTraceElement -> stackTraceElement.toString() + "\n") )
+					.collect( Collectors.joining() ) )
+			.exceptionMessage( e.getMessage() )
+			.build();
+		return new joliex.meta.spec.faults.CodeCheckException( codeCheckExceptionType );
+	}
+
 	/**
 	 *
 	 * @param modulePath The path to the module in URI form (e.g. "file:///home/user/main.ol").
 	 * @return The Module
 	 * @throws joliex.meta.spec.faults.CodeCheckException If the module cannot be parsed
 	 */
-	public Value parseModule( String modulePath ) throws joliex.meta.spec.faults.CodeCheckException {
+	public Module parseModule( String modulePath ) throws joliex.meta.spec.faults.CodeCheckException {
 
 		try {
 			Program moduleProgram = getModuleProgram( modulePath );
-
-			return Module.toValue( Module.builder()
+			/*
+			 * //TODO DELETE return Module.toValue( Module.builder() .types( parseTypes( moduleProgram ) )
+			 * .services( parseServices( moduleProgram ) ) .interfaces( parseInterfaces( moduleProgram ) )
+			 * .build() );
+			 */
+			return Module.builder()
 				.types( parseTypes( moduleProgram ) )
 				.services( parseServices( moduleProgram ) )
 				.interfaces( parseInterfaces( moduleProgram ) )
-				.build() );
+				.build();
 		} catch( CodeCheckException e ) {
-			throw new joliex.meta.spec.faults.CodeCheckException( new VoidBasicType( new JolieNative.JolieVoid() ) );
+			throw getCodeCheckExceptionType( e );
 		}
 	}
 
-	public Value resolveSymbol( LocatedSymbolRef request ) throws joliex.meta.spec.faults.CodeCheckException {
+
+
+	public ResolveSymbolResponse resolveSymbol( LocatedSymbolRef request )
+		throws joliex.meta.spec.faults.CodeCheckException {
 		String modulePath = request.textLocation().source();
 		URI moduleURI = URI.create( modulePath );
 
@@ -732,13 +767,42 @@ public class AstService extends JavaService {
 				.node();
 
 			return switch( node ) {
-			case ServiceNode serviceNode -> ServiceDef.toValue( getService( serviceNode ) );
-			case InterfaceDefinition interfaceDefinition -> InterfaceDef.toValue( getInterface( interfaceDefinition ) );
-			case TypeDefinition typeDefinition -> TypeDef.toValue( getTypeDef( typeDefinition ) );
+			case ServiceNode serviceNode -> ResolveSymbolResponse.of3( getService( serviceNode ) );
+			case InterfaceDefinition interfaceDefinition ->
+				ResolveSymbolResponse.of2( getInterface( interfaceDefinition ) );
+			case TypeDefinition typeDefinition -> ResolveSymbolResponse.of1( getTypeDef( typeDefinition ) );
 			default -> throw new IllegalStateException( "Unexpected value: " + node );
 			};
 		} catch( CodeCheckException e ) {
-			throw new joliex.meta.spec.faults.CodeCheckException( new VoidBasicType( new JolieNative.JolieVoid() ) );
+			throw getCodeCheckExceptionType( e );
 		}
+	}
+
+	/**
+	 * Returns the Path string required to import something from importedModule in module
+	 *
+	 * @param request Jolie Value with subTypes: module: string & importedModule: string
+	 * @return The import path
+	 */
+	public String toJolieImportString( Value request ) {
+		String modulePath = request.getFirstChild( "module" ).strValue();
+		String importedModulePath = request.getFirstChild( "importedModule" ).strValue();
+
+		return null;
+	}
+
+
+	public String fromJolieImportString( Value request ) {
+		return null;
+	}
+
+	public static void main( String args[] ) {
+		AstService service = new AstService();
+		Value request = Value.create();
+		request.getNewChild( "module" )
+			.setValue( "hello" );
+		request.getNewChild( "importedModule" )
+			.setValue( "world!" );
+		service.toJolieImportString( request );
 	}
 }

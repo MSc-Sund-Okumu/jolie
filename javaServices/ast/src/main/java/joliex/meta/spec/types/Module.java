@@ -7,6 +7,7 @@ package joliex.meta.spec.types;
  * <pre>
  * types[0,2147483647]: {@link joliex.meta.spec.types.TypeDef}
  * interfaces[0,2147483647]: {@link joliex.meta.spec.types.InterfaceDef}
+ * imports[0,2147483647]: {@link joliex.meta.spec.types.ImportDef}
  * services[0,2147483647]: {@link joliex.meta.spec.types.ServiceDef}
  * </pre>
  *
@@ -14,6 +15,7 @@ package joliex.meta.spec.types;
  * @see jolie.runtime.embedding.java.JolieNative
  * @see joliex.meta.spec.types.TypeDef
  * @see joliex.meta.spec.types.InterfaceDef
+ * @see joliex.meta.spec.types.ImportDef
  * @see joliex.meta.spec.types.ServiceDef
  * @see #builder()
  */
@@ -25,15 +27,20 @@ public final class Module extends jolie.runtime.embedding.java.TypedStructure {
 	private final java.util.List< joliex.meta.spec.types.TypeDef > types;
 	@jolie.runtime.embedding.java.util.JolieName( "interfaces" )
 	private final java.util.List< joliex.meta.spec.types.InterfaceDef > interfaces;
+	@jolie.runtime.embedding.java.util.JolieName( "imports" )
+	private final java.util.List< joliex.meta.spec.types.ImportDef > imports;
 	@jolie.runtime.embedding.java.util.JolieName( "services" )
 	private final java.util.List< joliex.meta.spec.types.ServiceDef > services;
 
 	public Module( java.util.SequencedCollection< joliex.meta.spec.types.TypeDef > types,
 		java.util.SequencedCollection< joliex.meta.spec.types.InterfaceDef > interfaces,
+		java.util.SequencedCollection< joliex.meta.spec.types.ImportDef > imports,
 		java.util.SequencedCollection< joliex.meta.spec.types.ServiceDef > services ) {
 		this.types = jolie.runtime.embedding.java.util.ValueManager.validated( "types", types, 0, 2147483647, t -> t );
 		this.interfaces =
 			jolie.runtime.embedding.java.util.ValueManager.validated( "interfaces", interfaces, 0, 2147483647, t -> t );
+		this.imports =
+			jolie.runtime.embedding.java.util.ValueManager.validated( "imports", imports, 0, 2147483647, t -> t );
 		this.services =
 			jolie.runtime.embedding.java.util.ValueManager.validated( "services", services, 0, 2147483647, t -> t );
 	}
@@ -44,6 +51,10 @@ public final class Module extends jolie.runtime.embedding.java.TypedStructure {
 
 	public java.util.List< joliex.meta.spec.types.InterfaceDef > interfaces() {
 		return interfaces;
+	}
+
+	public java.util.List< joliex.meta.spec.types.ImportDef > imports() {
+		return imports;
 	}
 
 	public java.util.List< joliex.meta.spec.types.ServiceDef > services() {
@@ -81,6 +92,8 @@ public final class Module extends jolie.runtime.embedding.java.TypedStructure {
 			jolie.runtime.embedding.java.util.ValueManager.fieldFrom(
 				j.getChildOrDefault( "interfaces", java.util.List.of() ), joliex.meta.spec.types.InterfaceDef::from ),
 			jolie.runtime.embedding.java.util.ValueManager.fieldFrom(
+				j.getChildOrDefault( "imports", java.util.List.of() ), joliex.meta.spec.types.ImportDef::from ),
+			jolie.runtime.embedding.java.util.ValueManager.fieldFrom(
 				j.getChildOrDefault( "services", java.util.List.of() ), joliex.meta.spec.types.ServiceDef::from ) );
 	}
 
@@ -91,6 +104,8 @@ public final class Module extends jolie.runtime.embedding.java.TypedStructure {
 				joliex.meta.spec.types.TypeDef::fromValue ),
 			jolie.runtime.embedding.java.util.ValueManager.vectorFieldFrom( v, "interfaces",
 				joliex.meta.spec.types.InterfaceDef::fromValue ),
+			jolie.runtime.embedding.java.util.ValueManager.vectorFieldFrom( v, "imports",
+				joliex.meta.spec.types.ImportDef::fromValue ),
 			jolie.runtime.embedding.java.util.ValueManager.vectorFieldFrom( v, "services",
 				joliex.meta.spec.types.ServiceDef::fromValue ) );
 	}
@@ -101,6 +116,8 @@ public final class Module extends jolie.runtime.embedding.java.TypedStructure {
 		t.types().forEach( c -> v.getNewChild( "types" ).deepCopy( joliex.meta.spec.types.TypeDef.toValue( c ) ) );
 		t.interfaces()
 			.forEach( c -> v.getNewChild( "interfaces" ).deepCopy( joliex.meta.spec.types.InterfaceDef.toValue( c ) ) );
+		t.imports()
+			.forEach( c -> v.getNewChild( "imports" ).deepCopy( joliex.meta.spec.types.ImportDef.toValue( c ) ) );
 		t.services()
 			.forEach( c -> v.getNewChild( "services" ).deepCopy( joliex.meta.spec.types.ServiceDef.toValue( c ) ) );
 
@@ -111,6 +128,7 @@ public final class Module extends jolie.runtime.embedding.java.TypedStructure {
 
 		private java.util.SequencedCollection< joliex.meta.spec.types.TypeDef > types;
 		private java.util.SequencedCollection< joliex.meta.spec.types.InterfaceDef > interfaces;
+		private java.util.SequencedCollection< joliex.meta.spec.types.ImportDef > imports;
 		private java.util.SequencedCollection< joliex.meta.spec.types.ServiceDef > services;
 
 		private Builder() {}
@@ -120,6 +138,8 @@ public final class Module extends jolie.runtime.embedding.java.TypedStructure {
 				.fieldFrom( j.getChildOrDefault( "types", java.util.List.of() ), joliex.meta.spec.types.TypeDef::from );
 			this.interfaces = jolie.runtime.embedding.java.util.ValueManager.fieldFrom(
 				j.getChildOrDefault( "interfaces", java.util.List.of() ), joliex.meta.spec.types.InterfaceDef::from );
+			this.imports = jolie.runtime.embedding.java.util.ValueManager.fieldFrom(
+				j.getChildOrDefault( "imports", java.util.List.of() ), joliex.meta.spec.types.ImportDef::from );
 			this.services = jolie.runtime.embedding.java.util.ValueManager.fieldFrom(
 				j.getChildOrDefault( "services", java.util.List.of() ), joliex.meta.spec.types.ServiceDef::from );
 		}
@@ -146,6 +166,17 @@ public final class Module extends jolie.runtime.embedding.java.TypedStructure {
 				joliex.meta.spec.types.InterfaceDef::builder ) ) );
 		}
 
+		public Builder imports( java.util.SequencedCollection< joliex.meta.spec.types.ImportDef > imports ) {
+			this.imports = imports;
+			return this;
+		}
+
+		public Builder imports(
+			java.util.function.Function< jolie.runtime.embedding.java.util.StructureListBuilder< joliex.meta.spec.types.ImportDef, joliex.meta.spec.types.ImportDef.Builder >, java.util.List< joliex.meta.spec.types.ImportDef > > f ) {
+			return imports( f.apply( new jolie.runtime.embedding.java.util.StructureListBuilder<>(
+				joliex.meta.spec.types.ImportDef::builder ) ) );
+		}
+
 		public Builder services( java.util.SequencedCollection< joliex.meta.spec.types.ServiceDef > services ) {
 			this.services = services;
 			return this;
@@ -158,7 +189,7 @@ public final class Module extends jolie.runtime.embedding.java.TypedStructure {
 		}
 
 		public Module build() {
-			return new Module( types, interfaces, services );
+			return new Module( types, interfaces, imports, services );
 		}
 	}
 }
