@@ -201,8 +201,8 @@ public class AstService extends JavaService {
 	Embedding getEmbeddings( EmbedServiceNode embedServiceNode ) {
 		Embedding.Builder builder = Embedding.builder();
 		try( Scanner scanner = getScannerAtLocation( embedServiceNode.context() ).scanner() ) {
-			// scanner position should be "embed(HERE) Service as Service"
-			Location serviceLocation = location( scanner );
+			// scanner position should be "(HERE)embed Service as Service"
+			Location serviceLocation = location( scanner, 1 );
 			// scanner position should be "embed Service(HERE) as Service"
 
 			builder.textLocation( location( embedServiceNode ) )
@@ -714,15 +714,13 @@ public class AstService extends JavaService {
 	 */
 	private Location location( Scanner scanner ) {
 		try {
-			Position startPosition = new Position( scanner.errorColumn(), scanner.line() );
 			Scanner.Token t;
 			do {
 				t = scanner.getToken();
 			} while( !t.isIdentifier() );
 
-			// TODO endPostion is wrong, should use tokenEndColumn and tokenEndLine but they are not in this
-			// branch
-			Position endPosition = new Position( scanner.currentColumn(), scanner.line() );
+			Position startPosition = new Position( scanner.errorColumn(), scanner.line() );
+			Position endPosition = new Position( scanner.tokenEndColumn(), scanner.tokenEndLine() );
 			Range range = new Range( startPosition, endPosition );
 			return Location
 				.builder()
@@ -782,7 +780,7 @@ public class AstService extends JavaService {
 			Scanner scanner = new Scanner( inputStream, uri );
 			// advance the Scanner until it reaches the start of the parsingContext
 			Scanner.Token token = null;
-			while( scanner.startLine() < targetLine || scanner.errorColumn() < targetColumn ) {
+			while( scanner.line() < targetLine || scanner.errorColumn() < targetColumn ) {
 				token = scanner.getToken();
 			}
 			// at this point the scanner should be at the beginning of the pars
@@ -894,13 +892,14 @@ public class AstService extends JavaService {
 		return null;
 	}
 
-	public static void main( String args[] ) {
+	public static void main( String args[] ) throws joliex.meta.spec.faults.CodeCheckException {
 		AstService service = new AstService();
-		Value request = Value.create();
-		request.getNewChild( "module" )
-			.setValue( "hello" );
-		request.getNewChild( "importedModule" )
-			.setValue( "world!" );
-		service.toJolieImportString( request );
+		service.parseModule( "file:///home/kasper/Documents/build/jolie/src/ast/main.ol" );
+		/*
+		 * Value request = Value.create(); request.getNewChild( "module" ) .setValue( "hello" );
+		 * request.getNewChild( "importedModule" ) .setValue( "world!" ); service.toJolieImportString(
+		 * request );
+		 *
+		 */
 	}
 }
