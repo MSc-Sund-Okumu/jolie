@@ -22,6 +22,7 @@ package joliex.meta;
 import jolie.Interpreter;
 import jolie.cli.CommandLineException;
 import jolie.lang.CodeCheckException;
+import jolie.lang.parse.Scanner;
 import jolie.lang.parse.SemanticVerifier;
 import jolie.lang.parse.ast.*;
 import jolie.lang.parse.ast.expression.ConstantStringExpression;
@@ -199,17 +200,27 @@ public class AstService extends JavaService {
 
 	Embedding getEmbeddings( EmbedServiceNode embedServiceNode ) {
 		Embedding.Builder builder = Embedding.builder();
+		try( Scanner scanner = getScannerAtLocation( embedServiceNode.context() ).scanner() ) {
+			// scanner position should be "embed(HERE) Service as Service"
+			Location serviceLocation = location( scanner );
+			// scanner position should be "embed Service(HERE) as Service"
 
-		builder.textLocation( location( embedServiceNode ) )
-			// FiXME serviceName has no real location
-			.embeddedService( new LocatedSymbolRef( embedServiceNode.serviceName(), location( embedServiceNode ) ) );
+			builder.textLocation( location( embedServiceNode ) )
 
-		if( embedServiceNode.hasBindingPort() )
-			// FIXME the outputPort of an embed statement has no location
-			builder.outputPort(
-				new LocatedSymbolRef( embedServiceNode.bindingPort().id(), location( embedServiceNode ) ) );
+				.embeddedService( new LocatedSymbolRef( embedServiceNode.serviceName(), serviceLocation ) );
 
-		return builder.build();
+			if( embedServiceNode.hasBindingPort() ) {
+				// scanner position should be "embed Service(HERE) as Service"
+				// so skip the "as"/"in" keyword
+				Location portLocation = location( scanner, 1 );
+				builder.outputPort(
+					new LocatedSymbolRef( embedServiceNode.bindingPort().id(), portLocation ) );
+			}
+			return builder.build();
+		} catch( IOException e ) {
+			throw new RuntimeException( e );
+		}
+
 	}
 
 	private OutputPort createOutputPort( OutputPortInfo outputPortInfo ) {
@@ -693,6 +704,93 @@ public class AstService extends JavaService {
 			.source( nodeLocation.documentUri().toString() )
 			.range( range )
 			.build();
+	}
+
+	/**
+	 * Creates a Location for the next identifier of the scanner and advances the scanner
+	 *
+	 * @param scanner
+	 * @return a Location
+	 */
+	private Location location( Scanner scanner ) {
+		try {
+			Position startPosition = new Position( scanner.errorColumn(), scanner.line() );
+			Scanner.Token t;
+			do {
+				t = scanner.getToken();
+			} while( !t.isIdentifier() );
+
+			// TODO endPostion is wrong, should use tokenEndColumn and tokenEndLine but they are not in this
+			// branch
+			Position endPosition = new Position( scanner.currentColumn(), scanner.line() );
+			Range range = new Range( startPosition, endPosition );
+			return Location
+				.builder()
+				.source( scanner.source().toString() )
+				.range( range )
+				.build();
+		} catch( IOException e ) {
+			// this should not happen as the file was already read before
+			throw new RuntimeException( e );
+		}
+	}
+
+	/**
+	 * Advance the scanner by firstAdvanceBy identifiers and create a Location for the next identifier
+	 * of the scanner
+	 *
+	 * @param scanner
+	 * @param firstAdvanceBy How many identifiers to advance by before finding the location
+	 * @return a Location
+	 */
+	private Location location( Scanner scanner, int firstAdvanceBy ) {
+		try {
+			for( int i = 0; i < firstAdvanceBy; i++ ) {
+				Scanner.Token t;
+				do {
+					t = scanner.getToken();
+				} while( !t.isIdentifier() );
+			}
+
+			return location( scanner );
+		} catch( IOException e ) {
+			// this should not happen as the file was already read before
+			throw new RuntimeException( e );
+		}
+	}
+
+	private record ScannerWithLastToken(Scanner.Token currentToken, Scanner scanner) {
+	}
+
+	/**
+	 * Provides a scanner at the location given by a ParsingContext, for use in creating textLocations
+	 * for AST elements that do not have them.
+	 *
+	 * @param parsingContext The desired location of the Scanner
+	 * @return a scanner progressed to the desired location and its last returned token
+	 * @throws RuntimeException If the file cannot be read (should not happen as the file was already
+	 *         read successfully to call this)
+	 */
+	private ScannerWithLastToken getScannerAtLocation( ParsingContext parsingContext ) {
+		// create a scanner for the file the parsing context points to.
+		try {
+			URI uri = parsingContext.source();
+			int targetLine = parsingContext.startLine();
+			int targetColumn = parsingContext.startColumn();
+			String path = uri.getPath();
+			InputStream inputStream = new BufferedInputStream( new FileInputStream( path ) );
+			Scanner scanner = new Scanner( inputStream, uri );
+			// advance the Scanner until it reaches the start of the parsingContext
+			Scanner.Token token = null;
+			while( scanner.startLine() < targetLine || scanner.errorColumn() < targetColumn ) {
+				token = scanner.getToken();
+			}
+			// at this point the scanner should be at the beginning of the pars
+			return new ScannerWithLastToken( token, scanner );
+		} catch( IOException e ) {
+			// We should not get into this case!
+			throw new RuntimeException( e );
+		}
 	}
 
 	private static joliex.meta.spec.faults.CodeCheckException getCodeCheckExceptionType( CodeCheckException e )
