@@ -248,12 +248,17 @@ public class AstService extends JavaService {
 
 		locationExpression.ifPresent( builder::location );
 
+		// TODO extract this into a separate method for reuse with inputPort and outputPort
 		Optional< ConstantStringExpression > protocolExpression = switch( outputPortInfo.protocol() ) {
 		// e.g. "protocol = "http" "
 		case VariableExpressionNode variableExpressionNode ->
 			Optional.of( (ConstantStringExpression) variableExpressionNode.variablePath().path().getFirst().key() );
 		// e.g. "protocol = "http" { .format = "json" }"
 		case InlineTreeExpressionNode inlineTreeExpressionNode -> {
+			if( inlineTreeExpressionNode
+				.rootExpression() instanceof ConstantStringExpression constantStringExpression ) {
+				yield Optional.of( constantStringExpression );
+			}
 			VariableExpressionNode variableExpressionNode =
 				(VariableExpressionNode) inlineTreeExpressionNode.rootExpression();
 			yield Optional
@@ -300,12 +305,17 @@ public class AstService extends JavaService {
 
 		locationExpression.ifPresent( builder::location );
 
+		// TODO extract this into a separate method for reuse with inputPort and outputPort
 		Optional< ConstantStringExpression > protocolExpression = switch( inputPortInfo.protocol() ) {
 		// e.g. "protocol = "http" "
 		case VariableExpressionNode variableExpressionNode ->
 			Optional.of( (ConstantStringExpression) variableExpressionNode.variablePath().path().getFirst().key() );
 		// e.g. "protocol = "http" { .format = "json" }"
 		case InlineTreeExpressionNode inlineTreeExpressionNode -> {
+			if( inlineTreeExpressionNode
+				.rootExpression() instanceof ConstantStringExpression constantStringExpression ) {
+				yield Optional.of( constantStringExpression );
+			}
 			VariableExpressionNode variableExpressionNode =
 				(VariableExpressionNode) inlineTreeExpressionNode.rootExpression();
 			yield Optional
