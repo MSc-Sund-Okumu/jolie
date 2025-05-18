@@ -130,6 +130,43 @@ public class AstService extends JavaService {
 			.toList();
 	}
 
+	private List< ImportDef > parseImports( Program module ) {
+		return module.children().stream()
+			.filter( child -> child instanceof ImportStatement )
+			.map( node -> (ImportStatement) node )
+			.map( this::getImport )
+			.toList();
+	}
+
+	private ImportDef getImport( ImportStatement importStatement ) {
+		ImportDef.Builder builder = ImportDef.builder();
+		String importTarget = importStatement.prettyPrintTarget();
+		Location location = location( importStatement );
+		builder.textLocation( location( importStatement ) )
+			.modulePath( new LocatedString( importTarget, location ) );
+		if( importStatement.isNamespaceImport() ) {
+			return builder.build();
+		} else {
+			// add the symbols to the list
+			List< ImportedSymbol > importedSymbols = Arrays.stream( importStatement.importSymbolTargets() )
+				.map( importSymbolTarget -> getImportedSymbol( importSymbolTarget, location ) )
+				.toList();
+			return builder.importedSymbols( importedSymbols )
+				.build();
+		}
+	}
+
+	private ImportedSymbol getImportedSymbol( ImportSymbolTarget importSymbolTarget, Location location ) {
+		String localName = importSymbolTarget.localSymbolName();
+		String originalName = importSymbolTarget.originalSymbolName();
+		// TODO use getScannerAtLocation() to get the correct locations,
+		// hint: if localName!=originalName, forward the scanner until it sees the original name identifier
+		// token followed
+		// by token AS.
+		return new ImportedSymbol( new LocatedSymbolRef( localName, location ),
+			new LocatedSymbolRef( originalName, location ) );
+	}
+
 	private List< TypeDef > parseTypes( Program module ) {
 		return module.children().stream()
 			.filter( child -> child instanceof TypeDefinition )
@@ -837,15 +874,12 @@ public class AstService extends JavaService {
 
 		try {
 			Program moduleProgram = getModuleProgram( modulePath );
-			/*
-			 * //TODO DELETE return Module.toValue( Module.builder() .types( parseTypes( moduleProgram ) )
-			 * .services( parseServices( moduleProgram ) ) .interfaces( parseInterfaces( moduleProgram ) )
-			 * .build() );
-			 */
+
 			return Module.builder()
 				.types( parseTypes( moduleProgram ) )
 				.services( parseServices( moduleProgram ) )
 				.interfaces( parseInterfaces( moduleProgram ) )
+				.imports( parseImports( moduleProgram ) )
 				.build();
 		} catch( CodeCheckException e ) {
 			throw getCodeCheckExceptionType( e );

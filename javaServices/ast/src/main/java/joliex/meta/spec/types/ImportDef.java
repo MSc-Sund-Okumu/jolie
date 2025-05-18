@@ -7,14 +7,14 @@ package joliex.meta.spec.types;
  * <pre>
  * textLocation: {@link joliex.meta.spec.types.Location}
  * modulePath: {@link joliex.meta.spec.types.LocatedString}
- * importedSymbols[0,2147483647]: {@link joliex.meta.spec.types.LocatedSymbolRef}
+ * importedSymbols[0,2147483647]: {@link joliex.meta.spec.types.ImportedSymbol}
  * </pre>
  *
  * @see jolie.runtime.embedding.java.JolieValue
  * @see jolie.runtime.embedding.java.JolieNative
  * @see joliex.meta.spec.types.Location
  * @see joliex.meta.spec.types.LocatedString
- * @see joliex.meta.spec.types.LocatedSymbolRef
+ * @see joliex.meta.spec.types.ImportedSymbol
  * @see #builder()
  */
 public final class ImportDef extends jolie.runtime.embedding.java.TypedStructure {
@@ -26,10 +26,10 @@ public final class ImportDef extends jolie.runtime.embedding.java.TypedStructure
 	@jolie.runtime.embedding.java.util.JolieName( "modulePath" )
 	private final joliex.meta.spec.types.LocatedString modulePath;
 	@jolie.runtime.embedding.java.util.JolieName( "importedSymbols" )
-	private final java.util.List< joliex.meta.spec.types.LocatedSymbolRef > importedSymbols;
+	private final java.util.List< joliex.meta.spec.types.ImportedSymbol > importedSymbols;
 
 	public ImportDef( joliex.meta.spec.types.Location textLocation, joliex.meta.spec.types.LocatedString modulePath,
-		java.util.SequencedCollection< joliex.meta.spec.types.LocatedSymbolRef > importedSymbols ) {
+		java.util.SequencedCollection< joliex.meta.spec.types.ImportedSymbol > importedSymbols ) {
 		this.textLocation = jolie.runtime.embedding.java.util.ValueManager.validated( "textLocation", textLocation );
 		this.modulePath = jolie.runtime.embedding.java.util.ValueManager.validated( "modulePath", modulePath );
 		this.importedSymbols = jolie.runtime.embedding.java.util.ValueManager.validated( "importedSymbols",
@@ -44,7 +44,7 @@ public final class ImportDef extends jolie.runtime.embedding.java.TypedStructure
 		return modulePath;
 	}
 
-	public java.util.List< joliex.meta.spec.types.LocatedSymbolRef > importedSymbols() {
+	public java.util.List< joliex.meta.spec.types.ImportedSymbol > importedSymbols() {
 		return importedSymbols;
 	}
 
@@ -80,7 +80,7 @@ public final class ImportDef extends jolie.runtime.embedding.java.TypedStructure
 				joliex.meta.spec.types.LocatedString::from ),
 			jolie.runtime.embedding.java.util.ValueManager.fieldFrom(
 				j.getChildOrDefault( "importedSymbols", java.util.List.of() ),
-				joliex.meta.spec.types.LocatedSymbolRef::from ) );
+				joliex.meta.spec.types.ImportedSymbol::from ) );
 	}
 
 	public static ImportDef fromValue( jolie.runtime.Value v ) throws jolie.runtime.typing.TypeCheckingException {
@@ -91,7 +91,7 @@ public final class ImportDef extends jolie.runtime.embedding.java.TypedStructure
 			jolie.runtime.embedding.java.util.ValueManager.singleFieldFrom( v, "modulePath",
 				joliex.meta.spec.types.LocatedString::fromValue ),
 			jolie.runtime.embedding.java.util.ValueManager.vectorFieldFrom( v, "importedSymbols",
-				joliex.meta.spec.types.LocatedSymbolRef::fromValue ) );
+				joliex.meta.spec.types.ImportedSymbol::fromValue ) );
 	}
 
 	public static jolie.runtime.Value toValue( ImportDef t ) {
@@ -100,7 +100,7 @@ public final class ImportDef extends jolie.runtime.embedding.java.TypedStructure
 		v.getFirstChild( "textLocation" ).deepCopy( joliex.meta.spec.types.Location.toValue( t.textLocation() ) );
 		v.getFirstChild( "modulePath" ).deepCopy( joliex.meta.spec.types.LocatedString.toValue( t.modulePath() ) );
 		t.importedSymbols().forEach(
-			c -> v.getNewChild( "importedSymbols" ).deepCopy( joliex.meta.spec.types.LocatedSymbolRef.toValue( c ) ) );
+			c -> v.getNewChild( "importedSymbols" ).deepCopy( joliex.meta.spec.types.ImportedSymbol.toValue( c ) ) );
 
 		return v;
 	}
@@ -109,7 +109,7 @@ public final class ImportDef extends jolie.runtime.embedding.java.TypedStructure
 
 		private joliex.meta.spec.types.Location textLocation;
 		private joliex.meta.spec.types.LocatedString modulePath;
-		private java.util.SequencedCollection< joliex.meta.spec.types.LocatedSymbolRef > importedSymbols;
+		private java.util.SequencedCollection< joliex.meta.spec.types.ImportedSymbol > importedSymbols;
 
 		private Builder() {}
 
@@ -120,7 +120,7 @@ public final class ImportDef extends jolie.runtime.embedding.java.TypedStructure
 				joliex.meta.spec.types.LocatedString::from );
 			this.importedSymbols = jolie.runtime.embedding.java.util.ValueManager.fieldFrom(
 				j.getChildOrDefault( "importedSymbols", java.util.List.of() ),
-				joliex.meta.spec.types.LocatedSymbolRef::from );
+				joliex.meta.spec.types.ImportedSymbol::from );
 		}
 
 		public Builder textLocation( joliex.meta.spec.types.Location textLocation ) {
@@ -144,15 +144,15 @@ public final class ImportDef extends jolie.runtime.embedding.java.TypedStructure
 		}
 
 		public Builder importedSymbols(
-			java.util.SequencedCollection< joliex.meta.spec.types.LocatedSymbolRef > importedSymbols ) {
+			java.util.SequencedCollection< joliex.meta.spec.types.ImportedSymbol > importedSymbols ) {
 			this.importedSymbols = importedSymbols;
 			return this;
 		}
 
 		public Builder importedSymbols(
-			java.util.function.Function< jolie.runtime.embedding.java.util.StructureListBuilder< joliex.meta.spec.types.LocatedSymbolRef, joliex.meta.spec.types.LocatedSymbolRef.Builder >, java.util.List< joliex.meta.spec.types.LocatedSymbolRef > > f ) {
+			java.util.function.Function< jolie.runtime.embedding.java.util.StructureListBuilder< joliex.meta.spec.types.ImportedSymbol, joliex.meta.spec.types.ImportedSymbol.Builder >, java.util.List< joliex.meta.spec.types.ImportedSymbol > > f ) {
 			return importedSymbols( f.apply( new jolie.runtime.embedding.java.util.StructureListBuilder<>(
-				joliex.meta.spec.types.LocatedSymbolRef::builder ) ) );
+				joliex.meta.spec.types.ImportedSymbol::builder ) ) );
 		}
 
 		public ImportDef build() {

@@ -273,9 +273,13 @@ type InterfaceDef {
 type ImportDef {
     textLocation: TextLocation
     modulePath: LocatedString
-    importedSymbols*: LocatedSymbolRef
+    importedSymbols*: ImportedSymbol
 }
 
+type ImportedSymbol {
+    originalSymbolName: LocatedSymbolRef
+    localSymbolName: LocatedSymbolRef
+}
 
 /// A module.
 type Module {
